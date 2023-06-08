@@ -1,0 +1,4 @@
+requests~=2.28.1
+selenium~=4.7.2
+loguru~=0.6.0
+Pillow==9.5.0
