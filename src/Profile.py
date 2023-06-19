@@ -103,7 +103,7 @@ class AdsPowerProfile:
             tweet_button.click()
 
         self.random_sleep()
-        self.human_type(tweet_text)
+        self.human_type(tweet_text + ' ')
 
         self.random_sleep()
         final_tweet_button = self.driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetButton"]')
