@@ -1,3 +1,5 @@
+# TODO: randomise random users to follow amount
+
 from random import choice, randint, shuffle
 from sys import stderr
 from time import sleep
@@ -25,9 +27,10 @@ def start_warmup(_profile: AdsPowerProfile):
                     logger.error(f'{_profile.name} - failed to follow user @{user}, reason: {_e}')
 
     def random_follow():
-        if config['random_users_to_follow']:
-            logger.info(f'{_profile.name} - following random {config["random_users_to_follow"]} accounts')
-            for i in range(config['random_users_to_follow']):
+        if config['max_random_users_to_follow']:
+            users_to_follow_amount = randint(config['min_random_users_to_follow'], config['max_random_users_to_follow'])
+            logger.info(f'{_profile.name} - following random {users_to_follow_amount} accounts')
+            for i in range(users_to_follow_amount):
                 user = choice(random_users_to_follow)
                 try:
                     _profile.subscribe(user)
