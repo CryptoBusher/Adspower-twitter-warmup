@@ -1,48 +1,93 @@
-from random import choice, randint
+from random import choice, randint, shuffle
 from sys import stderr
 from time import sleep
 
 from loguru import logger
 
-from src.Profile import AdsPowerProfile
+from src.Profile import AdsPowerProfile, AlreadyFollowingException
 from data.config import config
 from data.profile_ids import profile_ids
-
 
 logger.remove()
 logger.add(stderr, format="<white>{time:HH:mm:ss}</white> | <level>{level: <8}</level> | <white>{message}</white>")
 
 
 def start_warmup(_profile: AdsPowerProfile):
+    def mandatory_follow():
+        if len(config['mandatory_users_to_follow']):
+            logger.info(f'{_profile.name} - following mandatory {len(config["mandatory_users_to_follow"])} accounts')
+            for user in config['mandatory_users_to_follow']:
+                try:
+                    _profile.subscribe(user)
+                except AlreadyFollowingException:
+                    logger.info(f'{_profile.name} - already following user @{user}')
+                except Exception as _e:
+                    logger.error(f'{_profile.name} - failed to follow user @{user}, reason: {_e}')
+
+    def random_follow():
+        if config['random_users_to_follow']:
+            logger.info(f'{_profile.name} - following random {config["random_users_to_follow"]} accounts')
+            for i in range(config['random_users_to_follow']):
+                user = choice(random_users_to_follow)
+                try:
+                    _profile.subscribe(user)
+                except AlreadyFollowingException:
+                    logger.info(f'{_profile.name} - already following user @{user}')
+                except Exception as err:
+                    logger.error(f'{_profile.name} - failed to follow user @{user}, reason: {err}')
+
+    def post_tweet():
+        if config['post_tweet']:
+            logger.info(f'{_profile.name} - posting tweet')
+            try:
+                tweet_text = choice(tweets)
+                _profile.post_tweet(tweet_text)
+                logger.info(f'{_profile.name} - tweet posted')
+            except Exception as err:
+                logger.error(f'{_profile.name} - failed to post tweet, reason: {err}')
+            finally:
+                sleep(5)
+                _profile.driver.get_screenshot_as_file(f"data/screenshots/{_profile.name}_posted_tweet.png")
+
+    # open profile
     logger.info(f'{_profile.name} - starting warmup')
     try:
         _profile.open_profile(config["headless"])
+        if _profile.profile_was_running:
+            logger.info(f'{_profile.name} - profile was already running')
+            if not config['warmup_running_profiles']:
+                return
         _profile.driver.maximize_window()
     except Exception as _e:
         logger.error(f'{_profile.name} - failed to open profile, reason: {_e}')
         return
 
-    logger.info(f'{_profile.name} - posting tweet')
-    try:
-        tweet_text = choice(tweets)
-        _profile.post_tweet(tweet_text)
-        logger.info(f'{_profile.name} - tweet posted')
-    except Exception as _e:
-        logger.error(f'{_profile.name} - failed to post tweet, reason: {_e}')
-    finally:
-        sleep(5)
-        _profile.driver.get_screenshot_as_file(f"data/screenshots/{_profile.name}_posted_tweet.png")
+    # warmup
+    all_actions = [
+        mandatory_follow,
+        random_follow,
+        post_tweet
+    ]
+    shuffle(all_actions)
 
-    logger.info(f'{_profile.name} - closing profile')
-    try:
-        _profile.close_profile()
-    except Exception as _e:
-        logger.error(f'{_profile.name} - failed to close profile, reason: {_e}')
+    for action in all_actions:
+        action()
+
+    # close profile
+    if not _profile.profile_was_running:
+        logger.info(f'{_profile.name} - closing profile')
+        try:
+            _profile.close_profile()
+        except Exception as _e:
+            logger.error(f'{_profile.name} - failed to close profile, reason: {_e}')
 
 
 if __name__ == "__main__":
     with open('data/twitter_handles.txt', 'r') as file:
         twitter_handles = [i.strip() for i in file]
+
+    with open('data/random_users_to_follow.txt', 'r') as file:
+        random_users_to_follow = [i.strip() for i in file]
 
     with open('data/tweets.txt', 'r', encoding="utf8") as file:
         tweets = [i.strip() for i in file]
