@@ -1,10 +1,9 @@
-# TODO: randomise random users to follow amount
-
 from random import choice, randint, shuffle
 from sys import stderr
 from time import sleep
 
 from loguru import logger
+from pyfiglet import Figlet
 
 from src.Profile import AdsPowerProfile, AlreadyFollowingException
 from data.config import config
@@ -12,6 +11,12 @@ from data.profile_ids import profile_ids
 
 logger.remove()
 logger.add(stderr, format="<white>{time:HH:mm:ss}</white> | <level>{level: <8}</level> | <white>{message}</white>")
+
+f = Figlet(font='5lineoblique')
+print(f.renderText('Busher'),
+      'Telegram channel: @CryptoKiddiesClub',
+      'Telegram chat: @CryptoKiddiesChat',
+      'Twitter: @CryptoBusher', sep='\n', end='\n\n')
 
 
 def start_warmup(_profile: AdsPowerProfile):
@@ -23,8 +28,8 @@ def start_warmup(_profile: AdsPowerProfile):
                     _profile.subscribe(user)
                 except AlreadyFollowingException:
                     logger.info(f'{_profile.name} - already following user @{user}')
-                except Exception as _e:
-                    logger.error(f'{_profile.name} - failed to follow user @{user}, reason: {_e}')
+                except Exception as err:
+                    logger.error(f'{_profile.name} - failed to follow user @{user},')
 
     def random_follow():
         if config['max_random_users_to_follow']:
@@ -37,7 +42,7 @@ def start_warmup(_profile: AdsPowerProfile):
                 except AlreadyFollowingException:
                     logger.info(f'{_profile.name} - already following user @{user}')
                 except Exception as err:
-                    logger.error(f'{_profile.name} - failed to follow user @{user}, reason: {err}')
+                    logger.error(f'{_profile.name} - failed to follow user @{user}')
 
     def post_tweet():
         if config['post_tweet']:
@@ -47,10 +52,19 @@ def start_warmup(_profile: AdsPowerProfile):
                 _profile.post_tweet(tweet_text)
                 logger.info(f'{_profile.name} - tweet posted')
             except Exception as err:
-                logger.error(f'{_profile.name} - failed to post tweet, reason: {err}')
+                logger.error(f'{_profile.name} - failed to post tweet')
             finally:
                 sleep(5)
                 _profile.driver.get_screenshot_as_file(f"data/screenshots/{_profile.name}_posted_tweet.png")
+
+    def surf_feed():
+        if config['surf_feed']:
+            logger.info(f'{_profile.name} - surfing feed')
+            try:
+                profile.surf_feed()
+                logger.info(f'{_profile.name} - finished surfing feed')
+            except Exception as err:
+                logger.error(f'{_profile.name} - failed to surf feed: {err}')
 
     # open profile
     logger.info(f'{_profile.name} - starting warmup')
@@ -69,7 +83,8 @@ def start_warmup(_profile: AdsPowerProfile):
     all_actions = [
         mandatory_follow,
         random_follow,
-        post_tweet
+        post_tweet,
+        surf_feed
     ]
     shuffle(all_actions)
 
