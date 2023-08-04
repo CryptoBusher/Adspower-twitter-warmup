@@ -1,5 +1,5 @@
 from time import sleep, time
-from random import randint, uniform, choice
+from random import randint, uniform, choice, shuffle
 
 import requests
 from selenium import webdriver
@@ -44,8 +44,8 @@ class AdsPowerProfile:
     def random_sleep():
         sleep(randint(config["min_random_pause_sec"], config["max_random_pause_sec"]))
 
-    def human_click(self, click_object):
-        size = click_object.size
+    def human_hover(self, element, click=False):
+        size = element.size
 
         width_deviation_pixels = randint(1, int(size["width"] * config["max_width_deviation"]))
         height_deviation_pixels = randint(1, int(size["height"] * config["max_height_deviation"]))
@@ -56,7 +56,10 @@ class AdsPowerProfile:
         x = width_deviation_pixels if positive_width_deviation else -width_deviation_pixels
         y = height_deviation_pixels if positive_height_deviation else -height_deviation_pixels
 
-        self.action.move_to_element_with_offset(click_object, x, y).click().perform()
+        if click:
+            self.action.move_to_element_with_offset(element, x, y).click().perform()
+        else:
+            self.action.move_to_element_with_offset(element, x, y).perform()
 
     def human_type(self, text: str):
         for char in text:
@@ -98,7 +101,7 @@ class AdsPowerProfile:
         url = self.API_ROOT + '/api/v1/browser/start'
         params = {
             "user_id": self._id,
-            "open_tabs": "1",
+            "open_tabs": "0",
             "ip_tab": "0",
             "headless": "1" if headless else "0",
         }
@@ -129,30 +132,34 @@ class AdsPowerProfile:
         self.driver.get(f'https://twitter.com/{self.twitter_handle}')
 
         self.random_sleep()
+        self.dodge_modals()
         tweet_button = self.driver.find_element(By.CSS_SELECTOR, '[href="/compose/tweet"]')
         try:
-            self.human_click(tweet_button)
+            self.human_hover(tweet_button, click=True)
         except:
             tweet_button.click()
 
         self.random_sleep()
+        self.dodge_modals()
         self.human_type(tweet_text + ' ')
 
         self.random_sleep()
+        self.dodge_modals()
         final_tweet_button = self.driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetButton"]')
-
         try:
-            self.human_click(final_tweet_button)
+            self.human_hover(final_tweet_button, click=True)
         except:
             final_tweet_button.click()
 
         self.random_sleep()
+        self.dodge_modals()
 
     def subscribe(self, username: str):
         self.driver.implicitly_wait(30)
         self.driver.get(f'https://twitter.com/{username}')
 
         self.random_sleep()
+        self.dodge_modals()
         try:
             follow_button = self.driver.find_element(By.CSS_SELECTOR, f'[aria-label="Follow @{username}"]')
         except NoSuchElementException:
@@ -160,8 +167,112 @@ class AdsPowerProfile:
             raise AlreadyFollowingException()
 
         try:
-            self.human_click(follow_button)
+            self.human_hover(follow_button, click=True)
         except:
             follow_button.click()
 
         self.random_sleep()
+        self.dodge_modals()
+
+    def dodge_modals(self):
+        self.driver.implicitly_wait(5)
+
+        try:
+            modal = self.driver.find_element(By.CSS_SELECTOR, f'[data-testid="sheetDialog"]')
+            buttons = modal.find_elements(By.CSS_SELECTOR, f'[data-testid="sheetDialog"] div[role="button"]')
+
+            for button in buttons:
+                if button.text in config['modals_buttons_to_press']:
+                    self.random_sleep()
+                    try:
+                        self.human_hover(button, click=True)
+                    except:
+                        button.click()
+                    finally:
+                        return
+        except:
+            pass
+
+    def scroll_feed_with_shortcuts(self):
+        for i in range(randint(config['min_feed_scrolls_per_episode'], config['max_feed_scrolls_per_episode'])):
+            self.action.send_keys('j').perform()
+            sleep(uniform(config['min_feed_scrolls_delay_sec'], config['max_feed_scrolls_delay_sec']))
+
+    def surf_feed(self):
+        def like_feed_tweet(_active_element):
+            like_button = _active_element.find_element(By.CSS_SELECTOR, '[data-testid="like"]')
+            try:
+                self.human_hover(like_button, click=True)
+            except:
+                like_button.click()
+
+        def retweet_feed_tweet(_active_element):
+            retweet_button = _active_element.find_element(By.CSS_SELECTOR, '[data-testid="retweet"]')
+            try:
+                self.human_hover(retweet_button, click=True)
+            except:
+                retweet_button.click()
+
+            self.random_sleep()
+            retweet_confirm_button = self.driver.find_element(By.CSS_SELECTOR, '[data-testid="retweetConfirm"]')
+            try:
+                self.human_hover(retweet_confirm_button, click=True)
+            except:
+                retweet_confirm_button.click()
+
+        def subscribe_feed_account(_active_element):
+            user_profile = _active_element.find_element(By.CSS_SELECTOR, '[data-testid="Tweet-User-Avatar"]')
+            self.human_hover(user_profile, click=False)
+            self.random_sleep()
+            hover_card = self.driver.find_element(By.CSS_SELECTOR, '[data-testid="HoverCard"]')
+
+            try:
+                hover_card.find_element(By.XPATH, '//div[contains(@data-testid, "-unfollow")]')
+                return
+            except:
+                try:
+                    follow_button = hover_card.find_element(By.XPATH, '//div[contains(@data-testid, "-follow")]')
+                except:
+                    return
+            try:
+                self.human_hover(follow_button, click=True)
+            except:
+                follow_button.click()
+
+        self.driver.implicitly_wait(30)
+        self.driver.get('https://twitter.com/home')
+
+        self.random_sleep()
+        self.dodge_modals()
+
+        for i in range(randint(config['min_feed_scroll_episodes'], config['max_feed_scroll_episodes'])):
+            self.random_sleep()
+            self.dodge_modals()
+            self.scroll_feed_with_shortcuts()
+            self.random_sleep()
+
+            to_subscribe = True if (uniform(0, 1) <= config['feed_subscribe_probability']) else False
+            to_retweet = True if (uniform(0, 1) <= config['feed_retweet_probability']) else False
+            to_like = True if (uniform(0, 1) <= config['feed_like_probability']) else False
+
+            if not to_subscribe + to_retweet + to_like:
+                continue
+
+            all_tweet_interactions = []
+            if to_subscribe:
+                all_tweet_interactions.append(subscribe_feed_account)
+            if to_retweet:
+                all_tweet_interactions.append(retweet_feed_tweet)
+            if to_like:
+                all_tweet_interactions.append(like_feed_tweet)
+            shuffle(all_tweet_interactions)
+
+            active_element = self.driver.execute_script("return document.activeElement")
+            for interaction in all_tweet_interactions:
+                try:
+                    interaction(active_element)
+                except Exception as e:
+                    break
+                finally:
+                    self.random_sleep()
+                    self.dodge_modals()
