@@ -29,7 +29,7 @@ def start_warmup(_profile: AdsPowerProfile):
                 except AlreadyFollowingException:
                     logger.info(f'{_profile.name} - already following user @{user}')
                 except Exception as err:
-                    logger.error(f'{_profile.name} - failed to follow user @{user},')
+                    logger.error(f'{_profile.name} - failed to follow user @{user}')
 
     def random_follow():
         if config['max_random_users_to_follow']:
