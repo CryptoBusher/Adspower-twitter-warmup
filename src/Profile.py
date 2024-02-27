@@ -133,7 +133,7 @@ class AdsPowerProfile:
 
         self.random_sleep()
         self.dodge_modals()
-        tweet_button = self.driver.find_element(By.CSS_SELECTOR, '[href="/compose/tweet"]')
+        tweet_button = self.driver.find_element(By.CSS_SELECTOR, '[href="/compose/post"]')
         try:
             self.human_hover(tweet_button, click=True)
         except:
