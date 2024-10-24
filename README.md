@@ -2,7 +2,7 @@
 ## Bot for warming up your Twitter accounts that are imported into the AdsPower
 Everyone understands that Twitter accounts must be active. I periodically use this tool for my farm and during 8 months only 4 accounts were banned (0.12$ each). This bot will help to save you a huge amount of time and some money. It works with Twitter accounts that are imported into [AdsPower] (https://share.adspower.net/Btc9YYgpiyJxhmW).
 
-My telegram: https://t.me/CrytoBusher <br>
+My telegram: https://t.me/CryptoBusher <br>
 My Twitter: https://twitter.com/CryptoBusher <br>
 
 My telegram channel [RU]: https://t.me/CryptoKiddiesClub <br>
@@ -62,7 +62,7 @@ Our telegram chat [RU]: https://t.me/CryptoKiddiesChat <br>
 ## Скрипт для прогрева ваших Твиттеров, которые импортированны в ферму AdsPower
 Все понимают, что Твиттеры нужно греть. Я периодически прогреваю свои акки и за 8 месяцев у меня отлетело всего 4 штуки (покупал их по USD 0.12). Этот скрипт поможет сэкономить тебе бешенное количество времени и немного денег. Он работает с профилями Twitter, которые импортированны в [AdsPower](https://share.adspower.net/Btc9YYgpiyJxhmW).
 
-Связь с создателем: https://t.me/CrytoBusher <br>
+Связь с создателем: https://t.me/CryptoBusher <br>
 Если ты больше по Твиттеру: https://twitter.com/CryptoBusher <br>
 
 Залетай сюда, чтоб не пропускать дропы подобных скриптов: https://t.me/CryptoKiddiesClub <br>
